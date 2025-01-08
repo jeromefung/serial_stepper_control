@@ -25,6 +25,11 @@ def move_relative_mm(port, distance_mm):
     port.write(str_to_send.encode('utf-8'))
     # todo: read current position after move, can't block
 
+def report_position(port):
+    port.write('P\n'.encode('utf-8'))
+
 def emergency_stop(port):
     port.write('S\n'.encode('utf-8'))
     
+# reading might need to be handled by main loop of gui application
+# look at serial object in_waiting
