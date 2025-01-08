@@ -15,11 +15,11 @@ Adafruit_StepperMotor *myAFStepper = AFMS.getStepper(200, 1);
 
 // Use AccelStepper library with functions
 void forwardstep1() {
-  myAFStepper->onestep(FORWARD, SINGLE);
+  myAFStepper->onestep(FORWARD, DOUBLE);
 }
 
 void backwardstep1() {
-  myAFStepper->onestep(BACKWARD, SINGLE);
+  myAFStepper->onestep(BACKWARD, DOUBLE);
 }
 
 AccelStepper Astepper1(forwardstep1, backwardstep1);  // use functions to step
@@ -36,9 +36,9 @@ void setup() {
   AFMS.begin();
 
   // set AccelStepper parameters
-  Astepper1.setMaxSpeed(400.0);  // steps per second
-  // Fuyu stage has 200 steps/rev and 2 mm pitch, so this 2 mm/second
-  Astepper1.setAcceleration(40.0);  // steps per second^2
+  Astepper1.setMaxSpeed(100.0);  // steps per second
+  // Fuyu stage has 200 steps/rev and 2 mm pitch, so this 1 mm/second
+  Astepper1.setAcceleration(25.0);  // steps per second^2
 
   //Serial.println("Setup complete");
 }
