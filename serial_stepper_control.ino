@@ -36,9 +36,11 @@ void setup() {
   AFMS.begin();
 
   // set AccelStepper parameters
-  Astepper1.setMaxSpeed(200.0);  // steps per second
+  Astepper1.setMaxSpeed(400.0);  // steps per second
   // Fuyu stage has 200 steps/rev and 2 mm pitch, so this 2 mm/second
-  Astepper1.setAcceleration(20.0);  // steps per second^2
+  Astepper1.setAcceleration(40.0);  // steps per second^2
+
+  //Serial.println("Setup complete");
 }
 
 void loop() {
@@ -64,30 +66,37 @@ void readSerialInstruction() {
   char endMarker = '\n';
   long relSteps;
 
-  while (Serial.available() && receivedChar != endMarker) {
-    receivedChar = Serial.read();
-    if (receivedChar != endMarker) {
-      instruction[ndx] = receivedChar;
+  //Serial.println("Instruction received");
+  while (receivedChar != endMarker) {
+    if (Serial.available() > 0) {
+      receivedChar = Serial.read();
+      if (receivedChar != endMarker) {
+        instruction[ndx] = receivedChar;
+      }
+
+      else {
+        instruction[ndx] = '\0'; // string termination character
+      }
+      //Serial.println(ndx);
+      //Serial.println(receivedChar);
+      ndx++;
     }
-    else {
-      instruction[ndx] = '\0'; // string termination character
-    }
-    ndx++;
   }
 
   switch (instruction[0]) {
     case 'S':
+      //Serial.println("Emergency stop");
       onEmergencyStop();
       break;
     case 'P':
       onReportPosition();
       break;
     case 'F':
-      relSteps = atol(instruction[1]); // convert after initial character
+      relSteps = strtol(&instruction[1], NULL, 0); // convert after initial character
       onMove(relSteps);
       break;
     case 'R':
-      relSteps = atol(instruction[1]);
+      relSteps = strtol(&instruction[1], NULL, 0);
       onMove(-1*relSteps);
       break;
   }
@@ -98,9 +107,10 @@ void onMove(long deltaSteps) {
   // Set target position (relative to current)
   Astepper1.move(deltaSteps);
 
-  bool keepMoving = true;
+  keepMoving = true;
+  bool accelStepperRunning = true;
 
-  while (keepMoving == true) {
+  while (keepMoving == true && accelStepperRunning == true) {
     // motion loop
 
     // check to see if there was an emergency stop command
@@ -108,10 +118,9 @@ void onMove(long deltaSteps) {
       readSerialInstruction();
     }
 
-    Astepper1.run();
+    accelStepperRunning = Astepper1.run(); // returns false once target position reached
   }
 
-  // cleanup code
   keepMoving = false;
   // report current position
   onReportPosition();
@@ -122,6 +131,7 @@ void onEmergencyStop() {
   keepMoving = false;
 }
 
+
 void onReportPosition() {
-  Serial.print(Astepper1.currentPosition());
+  Serial.println(Astepper1.currentPosition());
 }
