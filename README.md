@@ -1,0 +1,1 @@
+Arduino and Python code to control a stepper motor stage driven by an Adafruit Motor Shield via serial commands.
