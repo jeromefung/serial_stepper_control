@@ -82,7 +82,7 @@ class StageControl(tk.Frame):
             self.serial_connection = serial_stepper_lib.initialize_serial(self.serial_port_String.get())
             self.serial_connected = True
             for button in [self.rel_go_button, self.abs_go_button, self.stop_button]:
-                button.state = tk.NORMAL
+                button.config(state = tk.NORMAL)
                 
         except (FileNotFoundError, serial.SerialException):
             tk.messagebox.showerror(title='Error', message = 'Could not connect to Arduino. Try another serial port.')
