@@ -10,6 +10,9 @@ import serial
 steps_per_rev = 200
 mm_per_rev = 2.0
 
+def steps_to_mm(steps):
+    return steps / steps_per_rev * mm_per_rev
+
 def initialize_serial(device):
     ser = serial.Serial(device, 9600, timeout = None, write_timeout = 10)
     return ser
