@@ -12,13 +12,16 @@ mm_per_rev = 2.0
 
 def steps_to_mm(steps):
     return steps / steps_per_rev * mm_per_rev
+    
+def mm_to_steps(mm):
+    return round(mm / mm_per_rev * steps_per_rev)
 
 def initialize_serial(device):
     ser = serial.Serial(device, 9600, timeout = None, write_timeout = 10)
     return ser
 
 def move_relative_mm(port, distance_mm):
-    steps_to_move = round(abs(distance_mm) / mm_per_rev * steps_per_rev)
+    steps_to_move = abs(mm_to_steps(distance_mm))
     
     if distance_mm > 0:
         str_to_send = 'F' + str(steps_to_move) + '\n'

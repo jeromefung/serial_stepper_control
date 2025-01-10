@@ -28,6 +28,8 @@ class StageControl(tk.Frame):
         # empty for reading from serial port 
         self.serial_buffer = b''
         
+        self.current_pos_steps = 0
+        
         # create widgets
         self.create_widgets()
         
@@ -77,7 +79,8 @@ class StageControl(tk.Frame):
         self.rel_go_button = ttk.Button(self.parent, text = "Go", state = tk.DISABLED, 
                                         command = self.on_move_relative)
         self.rel_go_button.grid(column = 3, row = 0)
-        self.abs_go_button = ttk.Button(self.parent, text = "Go", state = tk.DISABLED)
+        self.abs_go_button = ttk.Button(self.parent, text = "Go", state = tk.DISABLED,
+                                        command = self.on_move_absolute)
         self.abs_go_button.grid(column = 3, row = 1)     
         self.stop_button = ttk.Button(self.parent, text = "STOP", state = tk.DISABLED,
                                       command = self.on_stop)
@@ -99,9 +102,14 @@ class StageControl(tk.Frame):
         #print(relative_pos)
         if self.validate_position(relative_pos): # ok
             serial_stepper_lib.move_relative_mm(self.serial_connection, float(relative_pos))
-        else:
-            pass
 
+    def on_move_absolute(self):
+        # validate
+        absolute_pos = self.absolute_pos_String.get()
+        if self.validate_position(absolute_pos):
+            delta = float(absolute_pos) - serial_stepper_lib.steps_to_mm(self.current_pos_steps)
+            serial_stepper_lib.move_relative_mm(self.serial_connection, delta)
+        
     def on_stop(self):
         serial_stepper_lib.emergency_stop(self.serial_connection)
         serial_stepper_lib.report_position(self.serial_connection)
@@ -130,13 +138,14 @@ class StageControl(tk.Frame):
             if self.serial_connection.in_waiting > 0:
                 self.serial_buffer = self.serial_buffer + self.serial_connection.read(self.serial_connection.in_waiting)
                 # see if we got a complete message from serial ending in \r\n, keep listening otherwise
-                print(self.serial_buffer)
+                #print(self.serial_buffer)
                 if self.serial_buffer.decode()[-2:] == '\r\n':
                     position_in_steps = self.serial_buffer.decode().split('\r\n')[-2]
                     # if there were multiple communications, take the most recent one 
                     self.serial_buffer = b'' # clear it
+                    self.current_pos_steps = int(position_in_steps)
                     # convert from steps to float
-                    position_in_mm = serial_stepper_lib.steps_to_mm(int(position_in_steps))
+                    position_in_mm = serial_stepper_lib.steps_to_mm(self.current_pos_steps)
                     self.current_pos_String.set(str(position_in_mm))
                     
         self.after(100, self.check_position_update)
